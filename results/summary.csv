@@ -1,0 +1,4 @@
+Model,Subject-Dependent Acc,LOSO Acc
+SVM (baseline),71.40% ± 16.63%,53.60% ± 12.20%
+MLP (baseline),68.07% ± 18.69%,56.90% ± 13.17%
+MLP+Attention,65.32% ± 16.70%,55.27% ± 14.55%
