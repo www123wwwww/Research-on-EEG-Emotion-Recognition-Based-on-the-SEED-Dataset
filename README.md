@@ -1,6 +1,6 @@
 # EEG Emotion Recognition on SEED Dataset
 
-基于 SEED 数据集的脑电情绪识别研究，涵盖**注意力机制、跨 session 迁移学习与跨被试域适应**三个研究方向。
+基于 SEED 数据集的脑电情绪识别研究，涵盖**注意力机制、跨 session 迁移学习（含 session 间域适应）与跨被试域适应**四个研究方向。
 
 > 研究思路与每步发现见 [RESEARCH_STORY.md](RESEARCH_STORY.md)
 
@@ -10,13 +10,16 @@
 
 ### Subject-Dependent（被试依赖）
 
-| 模型 | 准确率 | vs SVM 基线 |
+| 模型 | 准确率 | vs MLP 基线 |
 |------|:------:|:-----------:|
-| SVM（baseline） | 71.40% ± 16.63% | — |
-| MLP（baseline） | 68.07% ± 18.69% | −3.33% |
-| MLP + Attention | 65.32% ± 16.70% | −6.08% |
-| SVM + Cross-Session | 78.17% ± 14.55% | +6.77% |
-| MLP + Cross-Session | 77.63% ± 14.22% | +6.23% |
+| SVM（baseline） | 71.40% ± 16.63% | +3.33% |
+| MLP（baseline） | 68.07% ± 18.69% | — |
+| MLP + Attention | 65.32% ± 16.70% | −2.75% |
+| SVM + Cross-Session | 78.17% ± 14.55% | +10.10% |
+| MLP + Cross-Session | 77.63% ± 14.22% | +9.56% |
+| MLP + CS + AdaBN（无微调） | 80.28% ± 14.31% | +12.21% |
+| MLP + CS + AdaBN + Finetune | 80.46% ± 13.73% | +12.39% |
+| **MLP + CS + CORAL** | **82.09% ± 10.78%** | **+14.02%** |
 
 ### LOSO（跨被试，Leave-One-Subject-Out）
 
@@ -69,13 +72,19 @@
 │   │   ├── evaluate_dann.py    # 对比表：6种方法（含CORAL/MMD/DANN）
 │   │   └── visualize_dann.py   # 6种方法柱状图 + 逐折delta折线图（最终综合图）
 │   │
-│   └── cross_session/          # 跨session迁移学习（Subject-Dependent场景）
-│       ├── train_cross_session.py      # MLP：其他2个session预训练 → 目标session微调
-│       ├── train_svm_cross_session.py  # SVM：合并其他2个session数据一次性训练
-│       ├── evaluate_cross_session.py   # 对比表：基线3种 + MLP+跨session
-│       ├── evaluate_full.py            # 对比表：全部5种方法（含SVM+跨session）
-│       ├── visualize_cross_session.py  # MLP跨session的柱状图 + 逐折折线图
-│       └── visualize_full.py           # 全部5种方法：柱状图 + 数据效应vs方法效应delta图
+│   └── cross_session/          # 跨session迁移学习 + session间域适应（Subject-Dependent场景）
+│       ├── train_cross_session.py             # MLP：其他2个session预训练 → 目标session微调
+│       ├── train_svm_cross_session.py         # SVM：合并其他2个session数据一次性训练
+│       ├── train_cross_session_coral.py       # MLP + 预训练时加CORAL对齐session分布
+│       ├── train_cross_session_adabn.py       # MLP + 预训练后用AdaBN替换BN统计量
+│       ├── evaluate_cross_session.py          # 对比表：基线3种 + MLP+跨session
+│       ├── evaluate_full.py                   # 对比表：全部5种方法（含SVM+跨session）
+│       ├── evaluate_cross_session_coral.py    # 对比表：含CORAL方法
+│       ├── evaluate_cross_session_adabn.py    # 对比表：含AdaBN变体（无FT vs FT）
+│       ├── visualize_cross_session.py         # MLP跨session的柱状图 + 逐折折线图
+│       ├── visualize_full.py                  # 全部5种方法：柱状图 + delta图
+│       ├── visualize_cross_session_coral.py   # CORAL结果：柱状图 + CORAL贡献delta图
+│       └── visualize_cross_session_adabn.py   # AdaBN结果：柱状图 + 零标签免费增益delta图
 │
 └── results/
     ├── summary.csv                         # 基线6种实验汇总（自动生成）
@@ -97,9 +106,18 @@
     └── cross_session/                      # 跨session实验结果
         ├── subject_dependent_svm_cross_session_results.npy
         ├── subject_dependent_mlp_cross_session_results.npy
-        ├── summary_full.csv                # 全5种Subject-Dependent方法汇总
+        ├── subject_dependent_mlp_cross_session_coral_results.npy
+        ├── subject_dependent_mlp_cross_session_adabn_results.npy
+        ├── subject_dependent_mlp_cross_session_adabn_only_results.npy
+        ├── summary_full.csv                # 全5种方法汇总（基线+跨session）
+        ├── summary_with_coral.csv          # 含CORAL方法汇总
+        ├── summary_with_adabn.csv          # 含AdaBN变体汇总
         ├── subject_dependent_full.png      # 5方法柱状对比图
-        └── subject_dependent_delta.png     # 逐折delta图（数据效应 vs 方法效应）
+        ├── subject_dependent_delta.png     # 逐折delta图（数据效应 vs 方法效应）
+        ├── subject_dependent_with_coral.png   # 6方法柱状图（含CORAL）
+        ├── subject_dependent_coral_delta.png  # CORAL贡献逐折delta图
+        ├── subject_dependent_with_adabn.png   # 7方法柱状图（含AdaBN变体）
+        └── subject_dependent_adabn_delta.png  # AdaBN免费增益逐折delta图
 ```
 
 ---
@@ -152,6 +170,44 @@ python src/cross_session/evaluate_full.py --save
 
 # 图表（柱状图 + 数据效应 vs 方法效应 delta 图）
 python src/cross_session/visualize_full.py
+```
+
+结果保存至 `results/cross_session/`。
+
+---
+
+### 第二步补充：被试依赖改进——Session 间域适应
+
+在跨 session 预训练基础上，显式对齐 session 间的特征分布漂移。
+
+#### 2-A CORAL（预训练阶段加协方差对齐）
+
+```bash
+# 训练（默认 λ=1.0，可调整）
+python src/cross_session/train_cross_session_coral.py
+python src/cross_session/train_cross_session_coral.py --lambda_coral 0.5
+
+# 对比表（含 CORAL 方法）
+python src/cross_session/evaluate_cross_session_coral.py --save --fold
+
+# 可视化
+python src/cross_session/visualize_cross_session_coral.py
+```
+
+#### 2-B AdaBN（预训练后无监督替换 BN 统计量）
+
+```bash
+# 完整流程：预训练 → AdaBN → 微调
+python src/cross_session/train_cross_session_adabn.py
+
+# 消融：仅 AdaBN，不微调（测量零标签自适应增益）
+python src/cross_session/train_cross_session_adabn.py --no_finetune
+
+# 对比表（含 AdaBN 变体）
+python src/cross_session/evaluate_cross_session_adabn.py --save --fold
+
+# 可视化
+python src/cross_session/visualize_cross_session_adabn.py
 ```
 
 结果保存至 `results/cross_session/`。
@@ -233,6 +289,8 @@ python src/domain_adaptation/train_dann.py  --lambda_dann  0.5
 |------|---------|
 | SVM + 跨session | 将同被试其他2个session的数据合并进训练集，单次 fit |
 | MLP + 跨session预训练 | Phase 1：lr=1e-3 在其他2个session预训练；Phase 2：lr=2e-4 在目标session微调 |
+| MLP + CS + CORAL | 预训练阶段加 CORAL loss，对齐 source session 与 target session（无标签）的特征协方差 |
+| MLP + CS + AdaBN | 预训练后，用目标 session 全量数据（无标签）重置 BN 的 running mean/var；可选接微调 |
 
 ---
 
@@ -263,3 +321,5 @@ python src/domain_adaptation/train_dann.py  --lambda_dann  0.5
 > Long, M., et al., "Learning Transferable Features with Deep Adaptation Networks," ICML, 2015.
 
 > Ganin, Y., et al., "Domain-Adversarial Training of Neural Networks," JMLR, 2016.
+
+> Li, Y., et al., "Revisiting Batch Normalization For Practical Domain Adaptation," ICLR Workshop, 2017.

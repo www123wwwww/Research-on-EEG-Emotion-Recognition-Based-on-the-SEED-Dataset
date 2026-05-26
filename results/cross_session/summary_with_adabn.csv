@@ -1,0 +1,6 @@
+Model,Accuracy,vs MLP baseline,vs MLP+CrossSession
+MLP (baseline),68.07% ± 18.69%,—,—
+MLP + Cross-Session,77.63% ± 14.22%,+9.56%,—
+MLP + CS + AdaBN (no FT),80.28% ± 14.31%,+12.21%,+2.65%
+MLP + CS + AdaBN + Finetune,80.46% ± 13.73%,+12.39%,+2.83%
+MLP + CS + CORAL,82.09% ± 10.78%,+14.03%,+4.46%
