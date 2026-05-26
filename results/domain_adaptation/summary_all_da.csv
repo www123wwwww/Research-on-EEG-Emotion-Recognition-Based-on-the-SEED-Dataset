@@ -1,0 +1,6 @@
+Model,LOSO Acc,Delta vs MLP
+SVM (baseline),53.60% ± 12.20%,—
+MLP (baseline),56.90% ± 13.17%,—
+MLP + Attention,55.27% ± 14.55%,—
+MLP + CORAL,66.06% ± 12.65%,+9.16%
+MLP + MMD  (ours),67.45% ± 11.83%,+10.55%

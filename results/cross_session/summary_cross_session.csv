@@ -1,0 +1,5 @@
+Model,Subject-Dep. Acc,vs SVM
+SVM (baseline),71.40% ± 16.63%,—
+MLP (baseline),68.07% ± 18.69%,—
+MLP + Attention,65.32% ± 16.70%,—
+MLP + Cross-Session (ours),77.63% ± 14.22%,+6.23%
