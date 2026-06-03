@@ -137,6 +137,64 @@ def get_loso_splits(normalize: bool = True):
     return splits
 
 
+def _per_subject_normalize(all_X: dict) -> dict:
+    """Z-score normalize each subject independently using its own statistics.
+
+    Args:
+        all_X: {subject_id: np.ndarray of shape (N_s, 5, 62)}
+
+    Returns:
+        {subject_id: normalized np.ndarray of same shape}
+    """
+    normalized = {}
+    for subj, X in all_X.items():
+        shape = X.shape
+        flat = X.reshape(shape[0], -1)
+        mu = flat.mean(axis=0)
+        sigma = flat.std(axis=0) + 1e-8
+        flat = (flat - mu) / sigma
+        normalized[subj] = flat.reshape(shape)
+    return normalized
+
+
+def get_loso_splits_subject_norm():
+    """LOSO splits with per-subject z-score normalization BEFORE merging.
+
+    Each subject is first normalized with its own mean/std, eliminating
+    inter-subject scale differences. Then the 11 source subjects are
+    concatenated into a single source domain that is more coherent
+    than the raw mixed distribution.
+
+    Each dict: {test_subject, X_train, y_train, X_test, y_test}
+    X shape: (N, 5, 62), already flattened to (N, 310) per-feature normalized
+    """
+    all_X = {}
+    all_y = {}
+    for subj in AVAILABLE_SUBJECTS:
+        all_X[subj], all_y[subj] = _load_subject_all_sessions(subj)
+
+    all_X = _per_subject_normalize(all_X)
+
+    splits = []
+    for test_subj in AVAILABLE_SUBJECTS:
+        X_te = all_X[test_subj]
+        y_te = all_y[test_subj]
+
+        train_parts_X = [all_X[s] for s in AVAILABLE_SUBJECTS if s != test_subj]
+        train_parts_y = [all_y[s] for s in AVAILABLE_SUBJECTS if s != test_subj]
+        X_tr = np.concatenate(train_parts_X, axis=0)
+        y_tr = np.concatenate(train_parts_y, axis=0)
+
+        splits.append({
+            "test_subject": test_subj,
+            "X_train": X_tr,
+            "y_train": y_tr,
+            "X_test": X_te,
+            "y_test": y_te,
+        })
+    return splits
+
+
 def get_flat_features(X: np.ndarray) -> np.ndarray:
     """Flatten (N, 5, 62) → (N, 310) for SVM/flat-MLP."""
     return X.reshape(X.shape[0], -1)
