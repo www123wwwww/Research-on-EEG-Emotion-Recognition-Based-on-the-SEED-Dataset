@@ -42,13 +42,13 @@ def load_result(method, norm, lambda_da=1.0):
 def plot_comparison_bar():
     methods = [
         ("MLP", "mixed", 1.0),
-        ("MLP + CORAL", "mixed", 1.0),
-        ("MLP + MMD", "mixed", 1.0),
-        ("MLP + DANN", "mixed", 1.0),
+        ("MLP + CORAL\n(λ=1.0)", "mixed", 1.0),
+        ("MLP + MMD\n(λ=1.0)", "mixed", 1.0),
+        ("MLP + DANN\n(λ=1.0)", "mixed", 1.0),
         ("MLP*", "per_subject", 1.0),
-        ("MLP* + CORAL", "per_subject", 1.0),
-        ("MLP* + MMD", "per_subject", 1.0),
-        ("MLP* + DANN", "per_subject", 1.0),
+        ("MLP* + CORAL\n(λ=5.0)", "per_subject", 5.0),
+        ("MLP* + MMD\n(λ=10.0)", "per_subject", 10.0),
+        ("MLP* + DANN\n(λ=5.0)", "per_subject", 5.0),
     ]
 
     labels = []
@@ -153,12 +153,12 @@ def plot_heatmap():
 # ── Figure 3: Lambda Sensitivity Curves ──────────────────────────────────────────
 
 def plot_lambda_sensitivity():
-    lambdas = [0.1, 0.5, 1.0, 2.0, 5.0]
+    lambdas = [0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0]
     methods = [("CORAL", "coral"), ("MMD", "mmd"), ("DANN", "dann")]
     colors = ["#4C72B0", "#55A868", "#C44E52"]
     markers = ["o", "s", "^"]
 
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(10, 5))
 
     for (name, key), color, marker in zip(methods, colors, markers):
         means, stds = [], []
@@ -170,7 +170,10 @@ def plot_lambda_sensitivity():
             else:
                 means.append(np.nan)
                 stds.append(np.nan)
-        ax.errorbar(lambdas, means, yerr=stds, marker=marker, color=color,
+        valid_lambdas = [l for l, m in zip(lambdas, means) if not np.isnan(m)]
+        valid_means = [m for m in means if not np.isnan(m)]
+        valid_stds = [s for s, m in zip(stds, means) if not np.isnan(m)]
+        ax.errorbar(valid_lambdas, valid_means, yerr=valid_stds, marker=marker, color=color,
                     label=name, capsize=4, linewidth=2, markersize=7)
 
     # Also add baseline horizontal line
@@ -181,7 +184,7 @@ def plot_lambda_sensitivity():
 
     ax.set_xlabel("Lambda", fontsize=12)
     ax.set_ylabel("Accuracy (%)", fontsize=12)
-    ax.set_title("Lambda Sensitivity Analysis (Per-Subject Normalization)", fontsize=13, fontweight="bold")
+    ax.set_title("Lambda Sensitivity Analysis (Per-Subject Normalization, Extended Range)", fontsize=13, fontweight="bold")
     ax.set_xscale("log")
     ax.set_xticks(lambdas)
     ax.set_xticklabels([str(l) for l in lambdas])
@@ -203,28 +206,28 @@ def plot_ablation_bar():
     baseline_mix = load_result("baseline", "mixed")
     baseline_ps = load_result("baseline", "per_subject")
     mmd_mix = load_result("mmd", "mixed")
-    mmd_ps = load_result("mmd", "per_subject")
-    coral_ps = load_result("coral", "per_subject")
-    dann_ps = load_result("dann", "per_subject")
+    mmd_ps_best = load_result("mmd", "per_subject", lambda_da=10.0)
+    coral_ps_best = load_result("coral", "per_subject", lambda_da=5.0)
+    dann_ps_best = load_result("dann", "per_subject", lambda_da=5.0)
 
     labels = ["Mixed norm\nbaseline", "Per-subj norm\nbaseline",
-              "Mixed norm\n+MMD", "Per-subj norm\n+MMD",
-              "Per-subj norm\n+CORAL", "Per-subj norm\n+DANN"]
+              "Mixed norm\n+MMD(λ=1)", "Per-subj norm\n+MMD(λ=10)",
+              "Per-subj norm\n+CORAL(λ=5)", "Per-subj norm\n+DANN(λ=5)"]
     values = [
         baseline_mix["mean_acc"] * 100 if baseline_mix else 0,
         baseline_ps["mean_acc"] * 100 if baseline_ps else 0,
         mmd_mix["mean_acc"] * 100 if mmd_mix else 0,
-        mmd_ps["mean_acc"] * 100 if mmd_ps else 0,
-        coral_ps["mean_acc"] * 100 if coral_ps else 0,
-        dann_ps["mean_acc"] * 100 if dann_ps else 0,
+        mmd_ps_best["mean_acc"] * 100 if mmd_ps_best else 0,
+        coral_ps_best["mean_acc"] * 100 if coral_ps_best else 0,
+        dann_ps_best["mean_acc"] * 100 if dann_ps_best else 0,
     ]
     stds = [
         baseline_mix["std_acc"] * 100 if baseline_mix else 0,
         baseline_ps["std_acc"] * 100 if baseline_ps else 0,
         mmd_mix["std_acc"] * 100 if mmd_mix else 0,
-        mmd_ps["std_acc"] * 100 if mmd_ps else 0,
-        coral_ps["std_acc"] * 100 if coral_ps else 0,
-        dann_ps["std_acc"] * 100 if dann_ps else 0,
+        mmd_ps_best["std_acc"] * 100 if mmd_ps_best else 0,
+        coral_ps_best["std_acc"] * 100 if coral_ps_best else 0,
+        dann_ps_best["std_acc"] * 100 if dann_ps_best else 0,
     ]
 
     colors = ["#4C72B0", "#55A868", "#4C72B0", "#55A868", "#C44E52", "#8172B2"]

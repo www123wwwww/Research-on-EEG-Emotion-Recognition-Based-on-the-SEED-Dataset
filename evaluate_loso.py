@@ -130,7 +130,7 @@ def print_lambda_sensitivity():
     print("Table 3: Lambda Sensitivity (per-subject norm)")
     print("=" * 80)
 
-    lambdas = [0.1, 0.5, 1.0, 2.0, 5.0]
+    lambdas = [0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0]
     methods = [("CORAL", "coral"), ("MMD", "mmd"), ("DANN", "dann")]
 
     header = f"{'Method':<10}" + "".join(f"{'λ='+str(l):<12}" for l in lambdas)
@@ -187,7 +187,7 @@ def save_csv():
     rows = []
     for method in ["baseline", "coral", "mmd", "dann"]:
         for norm in ["mixed", "per_subject"]:
-            for lam in [0.1, 0.5, 1.0, 2.0, 5.0]:
+            for lam in [0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 20.0]:
                 r = load_result(method, norm, lambda_da=lam)
                 if r is None:
                     continue

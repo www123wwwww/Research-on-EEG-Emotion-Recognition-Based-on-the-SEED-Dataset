@@ -73,7 +73,7 @@ VAL_RATIO = 0.2
 RESULTS_DIR = "/hpc_stor03/sjtu_home/duoming.jiang/agent/brain-seed/aaaresult"
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
-DEVICE = torch.device("cpu")
+DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 # ── utilities ────────────────────────────────────────────────────────────────────
