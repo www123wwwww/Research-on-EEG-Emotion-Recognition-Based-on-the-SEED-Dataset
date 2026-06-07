@@ -41,14 +41,14 @@ def load_result(method, norm, lambda_da=1.0):
 
 def plot_comparison_bar():
     methods = [
-        ("MLP", "mixed", 1.0),
-        ("MLP + CORAL\n(λ=1.0)", "mixed", 1.0),
-        ("MLP + MMD\n(λ=1.0)", "mixed", 1.0),
-        ("MLP + DANN\n(λ=1.0)", "mixed", 1.0),
-        ("MLP*", "per_subject", 1.0),
-        ("MLP* + CORAL\n(λ=5.0)", "per_subject", 5.0),
-        ("MLP* + MMD\n(λ=10.0)", "per_subject", 10.0),
-        ("MLP* + DANN\n(λ=5.0)", "per_subject", 5.0),
+        ("MLP", "baseline", "mixed", 1.0),
+        ("MLP + CORAL\n(λ=1.0)", "coral", "mixed", 1.0),
+        ("MLP + MMD\n(λ=1.0)", "mmd", "mixed", 1.0),
+        ("MLP + DANN\n(λ=1.0)", "dann", "mixed", 1.0),
+        ("MLP*", "baseline", "per_subject", 1.0),
+        ("MLP* + CORAL\n(λ=5.0)", "coral", "per_subject", 5.0),
+        ("MLP* + MMD\n(λ=10.0)", "mmd", "per_subject", 10.0),
+        ("MLP* + DANN\n(λ=5.0)", "dann", "per_subject", 5.0),
     ]
 
     labels = []
@@ -59,8 +59,7 @@ def plot_comparison_bar():
     mix_color = "#4C72B0"
     ps_color = "#DD8452"
 
-    for name, norm, lam in methods:
-        key = "baseline" if name in ("MLP", "MLP*") else name.split(" + ")[1].lower()
+    for name, key, norm, lam in methods:
         r = load_result(key, norm, lambda_da=lam)
         if r is None:
             labels.append(name)
@@ -108,11 +107,13 @@ def plot_comparison_bar():
 def plot_heatmap():
     key_methods = [
         ("MLP (mixed)", "baseline", "mixed", 1.0),
-        ("MLP+MMD (mixed)", "mmd", "mixed", 1.0),
-        ("MLP+DANN (mixed)", "dann", "mixed", 1.0),
+        ("MLP+CORAL (mixed, λ=5)", "coral", "mixed", 5.0),
+        ("MLP+MMD (mixed, λ=1)", "mmd", "mixed", 1.0),
+        ("MLP+DANN (mixed, λ=1)", "dann", "mixed", 1.0),
         ("MLP (per-subj)", "baseline", "per_subject", 1.0),
-        ("MLP+MMD (per-subj)", "mmd", "per_subject", 1.0),
-        ("MLP+DANN (per-subj)", "dann", "per_subject", 1.0),
+        ("MLP+MMD (per-subj, λ=10)", "mmd", "per_subject", 10.0),
+        ("MLP+CORAL (per-subj, λ=5)", "coral", "per_subject", 5.0),
+        ("MLP+DANN (per-subj, λ=5)", "dann", "per_subject", 5.0),
     ]
 
     data = []
