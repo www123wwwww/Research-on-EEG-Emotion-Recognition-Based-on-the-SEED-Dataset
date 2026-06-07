@@ -107,9 +107,9 @@ def plot_comparison_bar():
 def plot_heatmap():
     key_methods = [
         ("MLP (mixed)", "baseline", "mixed", 1.0),
-        ("MLP+CORAL (mixed, λ=5)", "coral", "mixed", 5.0),
-        ("MLP+MMD (mixed, λ=1)", "mmd", "mixed", 1.0),
-        ("MLP+DANN (mixed, λ=1)", "dann", "mixed", 1.0),
+        ("MLP+CORAL (mixed)", "coral", "mixed", 1.0),
+        ("MLP+MMD (mixed)", "mmd", "mixed", 1.0),
+        ("MLP+DANN (mixed)", "dann", "mixed", 1.0),
         ("MLP (per-subj)", "baseline", "per_subject", 1.0),
         ("MLP+MMD (per-subj, λ=10)", "mmd", "per_subject", 10.0),
         ("MLP+CORAL (per-subj, λ=5)", "coral", "per_subject", 5.0),
